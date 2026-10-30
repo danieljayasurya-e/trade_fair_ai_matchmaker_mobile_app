@@ -1,0 +1,13 @@
+# Filter by hall, check only that hall shows, then clear.
+appId: com.mmipoc
+name: Filter by hall and clear
+---
+- runFlow: subflows/start_with_sample.yaml
+- tapOn:
+    id: "open-filters"
+- tapOn: "Hall A"
+- tapOn: "Show \d+"
+- assertVisible: "Hall A  ✕"
+- assertNotVisible: "Hall [B-F] · Booth.*"
+- tapOn: "Clear all"
+- assertNotVisible: "Hall A  ✕"

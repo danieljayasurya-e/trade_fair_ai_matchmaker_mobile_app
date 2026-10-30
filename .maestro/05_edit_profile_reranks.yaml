@@ -1,0 +1,21 @@
+# Edit interests → list recomputes → rank-change badges appear.
+appId: com.mmipoc
+name: Edit profile re-ranks results
+---
+- runFlow: subflows/start_with_sample.yaml
+- tapOn: "Profile"
+- tapOn: "Edit my details"
+- scrollUntilVisible:
+    element: "Sustainable Packaging"
+    direction: DOWN
+- tapOn: "Sustainable Packaging"
+- tapOn: "Water Treatment"
+- scrollUntilVisible:
+    element:
+      id: "submit-profile"
+    direction: DOWN
+- tapOn:
+    id: "submit-profile"
+- extendedWaitUntil:
+    visible: "↑\d+|↓\d+|New"
+    timeout: 10000

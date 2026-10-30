@@ -1,0 +1,20 @@
+# Airplane mode → "Offline" chip, and a relaunch still shows the saved results.
+# With USE_MOCK=false (live API) the results screen also shows "Offline, showing saved results".
+appId: com.mmipoc
+name: Offline shows cached results
+---
+- runFlow: subflows/start_with_sample.yaml
+- setAirplaneMode: enabled
+- extendedWaitUntil:
+    visible: "Offline"
+    timeout: 10000
+- stopApp
+- launchApp
+- tapOn:
+    id: "continue"
+- extendedWaitUntil:
+    visible:
+      id: "latency-badge"
+    timeout: 10000
+- assertVisible: "#1"
+- setAirplaneMode: disabled

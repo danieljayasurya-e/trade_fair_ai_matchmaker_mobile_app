@@ -1,0 +1,13 @@
+# Open the #1 stall and see the score breakdown; back closes the sheet, not the screen.
+appId: com.mmipoc
+name: Stall detail sheet
+---
+- runFlow: subflows/start_with_sample.yaml
+- tapOn: "#1"
+- assertVisible: "Why this score"
+- assertVisible: "Semantic similarity"
+- assertVisible: "Stall → You"
+- back
+- assertNotVisible: "Why this score"
+- assertVisible:
+    id: "latency-badge"

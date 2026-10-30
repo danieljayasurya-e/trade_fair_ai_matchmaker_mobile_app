@@ -1,0 +1,15 @@
+# Fresh install → "Factory owner" sample profile → results loaded.
+appId: com.mmipoc
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "find-my-stalls"
+- tapOn: "Factory owner, automation buyer"
+- tapOn:
+    id: "submit-profile"
+- extendedWaitUntil:
+    visible:
+      id: "latency-badge"
+      text: "Top \d+ in \d+ ms"
+    timeout: 10000

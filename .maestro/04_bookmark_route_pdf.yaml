@@ -1,0 +1,28 @@
+# Bookmark 3 stalls → plan route → generate PDF.
+appId: com.mmipoc
+name: Bookmark, route and PDF
+---
+- runFlow: subflows/start_with_sample.yaml
+# A saved star turns to ★, so index 0 is always the next unsaved stall.
+- tapOn:
+    text: "☆"
+    index: 0
+- tapOn:
+    text: "☆"
+    index: 0
+- tapOn:
+    text: "☆"
+    index: 0
+- tapOn: "Visit list"
+- assertVisible: "3 stalls · swipe left to remove"
+- tapOn:
+    id: "plan-route"
+- assertVisible: "Hall [A-F] · \d (stop|stops)"
+- tapOn:
+    id: "download-pdf"
+# The system share sheet opens; its text differs per device, so just give it time and dismiss.
+- waitForAnimationToEnd:
+    timeout: 5000
+- back
+- assertVisible:
+    id: "download-pdf"

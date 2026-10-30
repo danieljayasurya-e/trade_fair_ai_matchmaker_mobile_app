@@ -1,44 +1,107 @@
-# Trade Fair AI Matchmaker
+# mmipoc: Trade Fair AI Matchmaker (mobile)
 
-An AI matchmaking engine and guest web app that tells each trade fair visitor which exhibitors to visit first, and why.
+The MMI visitor mobile app PoC for Team 4. A guest fills a short profile (or taps a sample profile) and gets their top 30 exhibitors with a match %, "Matched on" reasons and a score breakdown. Bare React Native CLI 0.88 (New Architecture), TypeScript.
 
-**Challenge:** Team 4 — "Connect Better" (Appzoy AI Software Hackathon, 29–31 Oct 2026). **Stretch:** "Engage Better" (exhibitor portal + MMI mobile app PoC).
+It works against the team backend or fully offline on built-in demo data.
 
-## The problem
+## Prerequisites
 
-A fair with hundreds of stalls is overwhelming for guests, and exhibitors struggle to reach the right audience. Manually comparing guest profiles to exhibitor offerings is slow. This project scores guest–exhibitor compatibility automatically and delivers a personalised **top 30** list per guest in under 2 seconds.
+- Node 22.11+
+- JDK 17 and Android Studio (Android SDK + platform tools), with `ANDROID_HOME` set
+- For iOS: a Mac with Xcode, Ruby/Bundler and CocoaPods
 
-## What it does
+```bash
+npm install
+cp .env.example .env          # Windows: copy .env.example .env
+```
 
-| Capability | Status |
-|---|---|
-| Ingest guest and exhibitor profiles (structured + unstructured) | TODO: not started |
-| Compatibility scoring (normalized, explainable) | TODO: not started |
-| Top 30 recommendations with booth details and match rationale | TODO: not started |
-| Guest web app: select profile, view scores, bookmark, save/export | TODO: not started |
-| Filter/sort by score, industry, hall/booth, product category | TODO: not started |
-| Stretch: exhibitor portal, anonymized lead insights | TODO: not started |
-| Stretch: MMI mobile app PoC, real-time sync | TODO: not started |
+## Run on an Android phone (USB)
 
-## Quick start
+1. On the phone: Settings → About phone → tap **Build number** 7 times, then Developer options → enable **USB debugging**.
+2. Plug in the phone and accept the "Allow USB debugging" prompt. Check it shows up: `adb devices`.
+3. In one terminal: `npm start` (Metro).
+4. In another: `npm run android` (same as `npx react-native run-android`).
 
-`TODO:` Not runnable yet. See [docs/SETUP.md](docs/SETUP.md) for the setup checklist, to be completed as the stack is chosen.
+If the app shows "Unable to load script", run `adb reverse tcp:8081 tcp:8081` and reload.
 
-## Live demo flow
+## Build a debug APK for the demo phone
 
-Select or upload a guest profile → run the matching engine → show top 30 with match % → filter and inspect rationale → save/export the visit list. (Stretch: open exhibitor portal → set lead threshold → view leads → show MMI app sync.)
+```bash
+npm run android:apk           # same as: cd android && gradlew assembleDebug
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
 
-## Documentation
+A debug APK still loads JS from Metro. For a phone that must run **without the laptop**, bundle the JS into the APK first:
 
-| Doc | Contents |
-|---|---|
-| [CLAUDE.md](CLAUDE.md) | Context for AI coding assistants |
-| [docs/PROJECT_GOALS.md](docs/PROJECT_GOALS.md) | Goals, users, success criteria, judging |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Components, data flow, integrations |
-| [docs/SETUP.md](docs/SETUP.md) | Environment and configuration |
-| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Team, workflow, conventions, timeline |
-| [docs/GLOSSARY.md](docs/GLOSSARY.md) | Domain and technical terms |
+```bash
+npx react-native bundle --platform android --dev false --entry-file index.js \
+  --bundle-output android/app/src/main/assets/index.android.bundle \
+  --assets-dest android/app/src/main/res
+npm run android:apk
+```
 
-## Team
+(Create `android/app/src/main/assets/` if it doesn't exist. Delete the bundle afterwards so dev builds go back to Metro.)
 
-Team 4, UI/UX mentor: Sneha. Team name and leader: `TODO:`. Roster in [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+## Run on iOS (macOS only)
+
+```bash
+cd ios && bundle install && bundle exec pod install && cd ..
+npm run ios                   # simulator
+```
+
+For a physical iPhone, open `ios/mmipoc.xcworkspace` in Xcode, pick your team under **Signing & Capabilities**, select the device and press Run.
+
+## Point the app at a teammate's laptop API
+
+1. Laptop and phone must be on the **same Wi-Fi**. The API must listen on `0.0.0.0`, not `127.0.0.1`.
+2. Find the laptop's IP (`ipconfig` on Windows, `ipconfig getifaddr en0` on macOS).
+3. In `.env`:
+   ```
+   API_URL=http://192.168.1.20:4000
+   USE_MOCK=false
+   ```
+4. **Rebuild**: `npm run android`. `.env` is baked in at build time, so a Metro reload is not enough.
+
+On the Android emulator, `http://localhost:4000` works as-is (the app rewrites it to `10.0.2.2`). Plain HTTP is allowed in debug builds only.
+
+If `/api/health` doesn't answer within 3 s at startup, the app falls back to demo data and shows a **Demo data** chip in the header.
+
+## Toggle demo (mock) mode
+
+- **At build time:** `USE_MOCK=true` in `.env`, then rebuild.
+- **During the demo, no rebuild:** Profile tab → **Data source** → *Demo data* / *Live API*. The choice is remembered on the device.
+
+Demo data is 60 synthetic exhibitors in halls A–F with a deterministic local scorer, so results change when the profile changes. It needs no network.
+
+## Tests
+
+```bash
+npm test                      # Jest + React Native Testing Library (unit, component, full guest-flow integration)
+npm run typecheck
+npm run lint
+npm run e2e                   # Maestro flows in .maestro/ against a connected device/emulator
+```
+
+End-to-end flows need [Maestro](https://maestro.dev) installed and the app already installed on the device (`npm run android`). They cover: sample profile → results, filter and clear, stall detail sheet, bookmark → route → PDF, edit profile → re-rank, and airplane mode → cached results.
+
+## Offline behaviour
+
+- Last results are saved on the phone. With no network they still show, with an **Offline** chip in the header and, on the live API, an "Offline, showing saved results" banner.
+- Bookmarks changed offline are queued on the phone and sent when the network returns. Then everything resyncs.
+- Coming back to the app from the background refreshes stale data.
+- Demo data needs no network at all.
+
+## Demo script (mobile part)
+
+From `docs/final-flow.md`. Before going on stage: install the APK with the JS bundled in, charge the phone, and pick the data source on the Profile tab.
+
+1. Open the app → **Find my stalls** → tap **Factory owner, automation buyer** → **Find my stalls**. The top 30 appear with the "Top 30 in N ms" badge.
+2. Tap **Filter** → Hall A → **Show**. Open the #1 stall and walk through the score bars and "Matched on" chips. Press back to close the sheet.
+3. Bookmark three stalls (☆) → **Visit list** tab → **Plan my route** (grouped by hall, ordered by booth) → **Download PDF** → share or save it.
+4. Profile → **Edit my details** → change interests → **Save and update matches**. Cards glide to their new ranks with ↑/↓ badges.
+
+Live sync with the web app and exhibitor portal (Socket.io) is not built yet; it needs the backend socket events in `docs/mobile-api-contract.md`. Changes made on the web show on the phone after pull to refresh or reopening the app.
+
+More project detail for contributors and coding agents: [CLAUDE.md](CLAUDE.md). API contract for the backend team: [docs/mobile-api-contract.md](docs/mobile-api-contract.md).
+
+Team-wide project docs (goals, architecture, setup checklist, contributing, glossary): [docs/PROJECT_GOALS.md](docs/PROJECT_GOALS.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SETUP.md](docs/SETUP.md), [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md), [docs/GLOSSARY.md](docs/GLOSSARY.md). Requirement coverage for the mobile app: [docs/requirements-checklist.md](docs/requirements-checklist.md).

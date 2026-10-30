@@ -1,0 +1,10 @@
+# Landing → sample profile → top 30 with the latency badge.
+appId: com.mmipoc
+name: Sample profile shows ranked results
+---
+- runFlow: subflows/start_with_sample.yaml
+- assertVisible: "#1"
+- assertVisible:
+    id: "result-count"
+    text: "Showing \d+ of \d+"
+- assertVisible: "Matched on"
