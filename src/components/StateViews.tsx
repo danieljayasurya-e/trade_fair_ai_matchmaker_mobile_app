@@ -31,8 +31,8 @@ export function StateView({ title, message, action, secondaryAction, tone = 'neu
 
 export function Banner({ text, tone = 'warning' }: { text: string; tone?: 'warning' | 'error' | 'info' }) {
   const { colors } = useTheme();
-  const bg = tone === 'error' ? colors.dangerSoft : tone === 'info' ? colors.accentSoft : colors.surfaceAlt;
-  const fg = tone === 'error' ? colors.danger : tone === 'info' ? colors.accent : colors.warning;
+  const bg = tone === 'error' ? colors.dangerSoft : tone === 'info' ? colors.successSoft : colors.surfaceAlt;
+  const fg = tone === 'error' ? colors.danger : tone === 'info' ? colors.onSuccessSoft : colors.warning;
   return (
     <View style={[styles.banner, { backgroundColor: bg }]} accessibilityRole="alert">
       <Text style={[styles.bannerText, { color: fg }]}>{text}</Text>
@@ -46,10 +46,9 @@ const styles = StyleSheet.create({
   message: { fontSize: font.body, textAlign: 'center', lineHeight: 22 },
   button: { alignSelf: 'stretch', marginTop: spacing.sm },
   banner: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
+    paddingHorizontal: spacing.md + 2,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.sm,
   },
-  bannerText: { fontSize: font.small, fontWeight: '600' },
+  bannerText: { fontSize: font.small, lineHeight: 20 },
 });

@@ -1,9 +1,10 @@
 import { clearAllStorage } from '../../../storage/storage';
 import { ApiError } from '../../client';
-import { SAMPLE_PROFILES } from '../fixtures';
+import { EXHIBITORS, SAMPLE_PROFILES } from '../fixtures';
 import { createMockClient } from '../mockClient';
 
 const profile = SAMPLE_PROFILES[0].profile;
+const exhibitorId = EXHIBITORS[0].id;
 
 beforeEach(() => {
   clearAllStorage();
@@ -31,26 +32,45 @@ describe('mock client', () => {
   it('bumps updatedAt on update', async () => {
     const guest = await client.createGuest(profile);
     await new Promise<void>((r) => setTimeout(r, 5));
-    const updated = await client.updateGuest(guest.id, { ...profile, interests: ['Robotics'] });
-    expect(updated.interests).toEqual(['Robotics']);
+    const updated = await client.updateGuest(guest.id, { ...profile, interests: ['Laser Cleaning'] });
+    expect(updated.interests).toEqual(['Laser Cleaning']);
     expect(updated.updatedAt > guest.updatedAt).toBe(true);
   });
 
   it('adds bookmarks idempotently and removes them', async () => {
     const guest = await client.createGuest(profile);
-    await client.addBookmark(guest.id, 'ex-a01');
-    const twice = await client.addBookmark(guest.id, 'ex-a01');
-    expect(twice.exhibitorIds).toEqual(['ex-a01']);
-    const removed = await client.removeBookmark(guest.id, 'ex-a01');
+    await client.addBookmark(guest.id, exhibitorId);
+    const twice = await client.addBookmark(guest.id, exhibitorId);
+    expect(twice.exhibitorIds).toEqual([exhibitorId]);
+    const removed = await client.removeBookmark(guest.id, exhibitorId);
     expect(removed.exhibitorIds).toEqual([]);
+    const again = await client.removeBookmark(guest.id, 'not-saved');
+    expect(again.exhibitorIds).toEqual([]);
   });
 
-  it('orders the route by hall, then booth in natural order', async () => {
+  it('rejects saving an unknown exhibitor', async () => {
     const guest = await client.createGuest(profile);
-    for (const id of ['ex-b04', 'ex-a10', 'ex-a01', 'ex-a04']) await client.addBookmark(guest.id, id);
+    await expect(client.addBookmark(guest.id, 'nope')).rejects.toMatchObject({ code: 'EXHIBITOR_NOT_FOUND', status: 404 });
+  });
+
+  it('returns a guest by id', async () => {
+    const guest = await client.createGuest(profile);
+    await expect(client.getGuest(guest.id)).resolves.toEqual(guest);
+    await expect(client.getGuest('nope')).rejects.toMatchObject({ status: 404 });
+  });
+
+  it('orders the route by row, then booth in natural order', async () => {
+    const guest = await client.createGuest(profile);
+    const { results } = await client.getRecommendations(guest.id);
+    const stalls = results.slice(0, 8).map((r) => r.exhibitor);
+    for (const s of stalls) await client.addBookmark(guest.id, s.id);
     const route = await client.getRoute(guest.id);
-    expect(route.halls.map((h) => h.hall)).toEqual(['A', 'B']);
-    expect(route.halls[0].stalls.map((s) => s.exhibitor.booth)).toEqual(['A-2', 'A-10', 'A-30']);
+    const rows = route.halls.map((h) => h.hall);
+    expect(rows).toEqual([...new Set(stalls.map((s) => s.hall))].sort());
+    for (const h of route.halls) {
+      const numbers = h.stalls.map((s) => Number(s.exhibitor.booth.split(' ')[1]));
+      expect(numbers).toEqual([...numbers].sort((a, b) => a - b));
+    }
   });
 
   it('honours an abort signal', async () => {

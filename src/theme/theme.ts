@@ -5,12 +5,19 @@ export interface Palette {
   surface: string;
   surfaceAlt: string;
   border: string;
+  /** Border of inputs and outlined buttons. */
+  outline: string;
   text: string;
   textMuted: string;
   accent: string;
   accentSoft: string;
   onAccent: string;
+  onAccentSoft: string;
+  teal: string;
+  tealSoft: string;
   success: string;
+  successSoft: string;
+  onSuccessSoft: string;
   warning: string;
   danger: string;
   dangerSoft: string;
@@ -19,50 +26,69 @@ export interface Palette {
 }
 
 const light: Palette = {
-  background: '#F5F7FB',
+  background: '#F8FAFC',
   surface: '#FFFFFF',
-  surfaceAlt: '#EEF1F7',
-  border: '#DCE1EA',
-  text: '#121826',
-  textMuted: '#5B6475',
-  accent: '#1F5EFF',
-  accentSoft: '#E3EBFF',
+  surfaceAlt: '#F1F5F9',
+  border: '#E2E8F0',
+  outline: '#64748B',
+  text: '#0F172A',
+  textMuted: '#475569',
+  accent: '#1D4ED8',
+  accentSoft: '#DBEAFE',
   onAccent: '#FFFFFF',
-  success: '#1A8F5A',
-  warning: '#B26A00',
-  danger: '#C62E3A',
-  dangerSoft: '#FDE8EA',
-  skeleton: '#E3E7EF',
-  backdrop: 'rgba(10, 14, 24, 0.45)',
+  onAccentSoft: '#1E3A8A',
+  teal: '#0F766E',
+  tealSoft: '#CCFBF1',
+  success: '#15803D',
+  successSoft: '#DCFCE7',
+  onSuccessSoft: '#14532D',
+  warning: '#B45309',
+  danger: '#B91C1C',
+  dangerSoft: '#FEE2E2',
+  skeleton: '#EEF2F6',
+  backdrop: 'rgba(15, 23, 42, 0.45)',
 };
 
 const dark: Palette = {
-  background: '#0D111A',
-  surface: '#161B26',
-  surfaceAlt: '#1F2633',
-  border: '#2C3442',
-  text: '#F1F4F9',
-  textMuted: '#A0A9B8',
-  accent: '#6B93FF',
-  accentSoft: '#1E2A4A',
-  onAccent: '#0D111A',
-  success: '#4CC38A',
-  warning: '#F0B44C',
-  danger: '#F07178',
-  dangerSoft: '#3A1E24',
-  skeleton: '#232A37',
+  background: '#0B1220',
+  surface: '#111A2C',
+  surfaceAlt: '#1C2740',
+  border: '#2A3650',
+  outline: '#7C8BA5',
+  text: '#F1F5F9',
+  textMuted: '#A3B0C6',
+  accent: '#7AA2FF',
+  accentSoft: '#1E2F57',
+  onAccent: '#0B1220',
+  onAccentSoft: '#BFD3FF',
+  teal: '#5EEAD4',
+  tealSoft: '#123A38',
+  success: '#4ADE80',
+  successSoft: '#12331F',
+  onSuccessSoft: '#BBF7D0',
+  warning: '#FBBF24',
+  danger: '#F87171',
+  dangerSoft: '#3B1A1F',
+  skeleton: '#1F2A40',
   backdrop: 'rgba(0, 0, 0, 0.6)',
 };
 
+/** Logo colours; the same in light and dark. */
+export const brand = { blue: '#1D4ED8', white: '#FFFFFF', mint: '#5EEAD4', teal: '#0F766E' } as const;
+
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
-export const radius = { sm: 8, md: 12, lg: 16, pill: 999 } as const;
+export const radius = { xs: 6, sm: 8, btn: 10, md: 12, lg: 16, pill: 999 } as const;
 export const font = {
   caption: 12,
+  meta: 13,
   small: 14,
+  label: 15,
   body: 16,
+  section: 18,
   title: 20,
-  heading: 26,
-  hero: 32,
+  screen: 22,
+  heading: 24,
+  hero: 30,
 } as const;
 /** Minimum touch target in points. */
 export const TOUCH = 44;
@@ -76,4 +102,11 @@ export function useTheme(): Theme {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   return { dark: isDark, colors: isDark ? dark : light };
+}
+
+/** The match-score band: colour of the ring and the words next to it. */
+export function scoreBand(score: number, colors: Palette): { label: string; color: string } {
+  if (score >= 80) return { label: 'Excellent fit', color: colors.success };
+  if (score >= 60) return { label: 'Good fit', color: colors.warning };
+  return { label: 'Partial fit', color: colors.textMuted };
 }

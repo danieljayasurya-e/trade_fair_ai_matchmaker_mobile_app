@@ -1,12 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useIsOnline } from '../net/online';
+import { useSession } from '../store/sessionStore';
 import { font, radius, spacing, useTheme } from '../theme/theme';
 import { ModeChip } from './ModeChip';
 
 function OfflineChip() {
-  const online = useIsOnline();
   const { colors } = useTheme();
-  if (online) return null;
   return (
     <View
       style={[styles.chip, { backgroundColor: colors.dangerSoft }]}
@@ -18,18 +17,20 @@ function OfflineChip() {
   );
 }
 
-/** Header-right status: "Offline" when there is no network, "Demo data" in mock mode. */
+/** Header status: "Live" or "Demo data", plus "Offline" when there is no network. "Live" gives way to "Offline". */
 export function HeaderChips() {
+  const online = useIsOnline();
+  const mode = useSession((s) => s.mode);
   return (
     <View style={styles.row}>
-      <OfflineChip />
-      <ModeChip />
+      {!online ? <OfflineChip /> : null}
+      {online || mode === 'mock' ? <ModeChip /> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center' },
-  chip: { borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 2, marginRight: spacing.sm },
-  text: { fontSize: font.caption, fontWeight: '700' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  chip: { borderRadius: radius.pill, paddingHorizontal: spacing.sm + 2, paddingVertical: spacing.xs },
+  text: { fontSize: font.caption, fontWeight: '600' },
 });

@@ -3,6 +3,7 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import type { Recommendation } from '../../api/schemas';
 import { BookmarkButton } from '../../components/BookmarkButton';
 import { font, radius, spacing, TOUCH, useTheme } from '../../theme/theme';
+import { HALL_NAME } from '../results/location';
 
 interface Props {
   item: Recommendation;
@@ -11,7 +12,7 @@ interface Props {
   stop?: number;
 }
 
-/** Saved stall. Swipe left to remove; the star button does the same for screen-reader users. */
+/** Saved stall. Swipe left to remove; the bookmark button does the same for screen-reader users. */
 export function SavedStallRow({ item, onRemove, stop }: Props) {
   const { colors } = useTheme();
   const { exhibitor } = item;
@@ -33,10 +34,10 @@ export function SavedStallRow({ item, onRemove, stop }: Props) {
       onSwipeableOpen={() => onRemove(item)}
       rightThreshold={64}
       overshootRight={false}
-      containerStyle={styles.container}
+      containerStyle={[styles.container, { borderColor: colors.border }]}
       testID={`saved-${exhibitor.id}`}
     >
-      <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={[styles.row, { backgroundColor: colors.surface }]}>
         {stop !== undefined ? (
           <View style={[styles.stop, { backgroundColor: colors.accent }]}>
             <Text style={[styles.stopText, { color: colors.onAccent }]}>{stop}</Text>
@@ -47,7 +48,7 @@ export function SavedStallRow({ item, onRemove, stop }: Props) {
             {exhibitor.name}
           </Text>
           <Text style={[styles.meta, { color: colors.textMuted }]} numberOfLines={1}>
-            Hall {exhibitor.hall} · Booth {exhibitor.booth} · {item.score}% match
+            {HALL_NAME} · {exhibitor.booth} · {item.score}% match
           </Text>
           <Text style={[styles.reason, { color: colors.textMuted }]} numberOfLines={2}>
             {item.reason}
@@ -60,21 +61,20 @@ export function SavedStallRow({ item, onRemove, stop }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { marginBottom: spacing.md, borderRadius: radius.lg, overflow: 'hidden' },
+  // The border sits on the container so the red action can't show through rounded row corners.
+  container: { marginBottom: spacing.md, borderWidth: 1, borderRadius: radius.md, overflow: 'hidden' },
   flex: { flex: 1 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: radius.lg,
     padding: spacing.lg,
     gap: spacing.md,
   },
   stop: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  stopText: { fontSize: font.small, fontWeight: '800' },
-  name: { fontSize: font.body, fontWeight: '700' },
-  meta: { fontSize: font.small, marginTop: 2 },
+  stopText: { fontSize: font.small, fontWeight: '700' },
+  name: { fontSize: font.body, fontWeight: '600' },
+  meta: { fontSize: font.meta, marginTop: 2 },
   reason: { fontSize: font.caption, marginTop: spacing.xs },
-  action: { justifyContent: 'center', alignItems: 'center', width: 96, minHeight: TOUCH },
+  action: { justifyContent: 'center', alignItems: 'center', width: 96, minHeight: TOUCH, marginVertical: 1 },
   actionText: { fontSize: font.small, fontWeight: '700' },
 });

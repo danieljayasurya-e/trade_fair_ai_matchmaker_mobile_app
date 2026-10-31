@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release builds: plain HTTP only to the hackathon API VM, HTTPS everywhere else.
+     Debug builds replace this file to allow any host (see src/debug/res/xml). -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">92.4.77.213</domain>
+    </domain-config>
+</network-security-config>

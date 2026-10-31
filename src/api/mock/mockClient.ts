@@ -68,6 +68,10 @@ export function createMockClient({ minDelayMs = 150, maxDelayMs = 400 }: MockOpt
       const now = new Date().toISOString();
       return saveGuest({ ...validate(input), id: `mock-${Date.now().toString(36)}`, updatedAt: now });
     },
+    async getGuest(id, signal) {
+      await wait(signal);
+      return getGuest(id);
+    },
     async updateGuest(id, input, signal) {
       await wait(signal);
       const existing = await getGuest(id);
@@ -86,6 +90,9 @@ export function createMockClient({ minDelayMs = 150, maxDelayMs = 400 }: MockOpt
     },
     async addBookmark(guestId, exhibitorId, signal) {
       await wait(signal);
+      if (!EXHIBITORS.some((e) => e.id === exhibitorId)) {
+        throw new ApiError('EXHIBITOR_NOT_FOUND', 'Exhibitor not found', 404);
+      }
       const ids = await readBookmarks(guestId);
       const next = ids.includes(exhibitorId) ? ids : [...ids, exhibitorId];
       await writeJson(keys.mockBookmarks(guestId), next);

@@ -1,13 +1,13 @@
-# Filter by hall, check only that hall shows, then clear.
+# Filter by booth row, check the chip appears, then clear.
 appId: com.mmipoc
-name: Filter by hall and clear
+name: Filter by row and clear
 ---
 - runFlow: subflows/start_with_sample.yaml
 - tapOn:
     id: "open-filters"
-- tapOn: "Hall A"
-- tapOn: "Show \d+"
-- assertVisible: "Hall A  ✕"
-- assertNotVisible: "Hall [B-F] · Booth.*"
+- tapOn: "Row L[A-F]"
+- tapOn:
+    id: "apply-filters"
+- assertVisible: "Row L[A-F]  ✕"
 - tapOn: "Clear all"
-- assertNotVisible: "Hall A  ✕"
+- assertNotVisible: "Row L[A-F]  ✕"

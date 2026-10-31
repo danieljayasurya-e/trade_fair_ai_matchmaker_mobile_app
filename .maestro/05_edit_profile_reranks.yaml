@@ -6,10 +6,10 @@ name: Edit profile re-ranks results
 - tapOn: "Profile"
 - tapOn: "Edit my details"
 - scrollUntilVisible:
-    element: "Sustainable Packaging"
+    element: "Quantum Technologies"
     direction: DOWN
-- tapOn: "Sustainable Packaging"
-- tapOn: "Water Treatment"
+- tapOn: "Quantum Technologies"
+- tapOn: "Laser Safety"
 - scrollUntilVisible:
     element:
       id: "submit-profile"

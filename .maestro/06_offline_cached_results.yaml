@@ -16,5 +16,5 @@ name: Offline shows cached results
     visible:
       id: "latency-badge"
     timeout: 10000
-- assertVisible: "#1"
+- assertVisible: "#1 · Hall 1 · .*"
 - setAirplaneMode: disabled

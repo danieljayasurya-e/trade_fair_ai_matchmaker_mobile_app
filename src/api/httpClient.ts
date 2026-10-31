@@ -85,20 +85,23 @@ export function createHttpClient(baseUrl: string, defaultTimeoutMs = 10_000): Ap
     timeoutMs,
   });
   const guestPath = (id: string) => `/api/guests/${encodeURIComponent(id)}`;
+  const bookmarkPath = (id: string, exhibitorId: string) =>
+    `${guestPath(id)}/bookmarks/${encodeURIComponent(exhibitorId)}`;
 
   return {
     kind: 'http',
     health: (signal) => request('GET', '/api/health', healthSchema, opts(signal, undefined, 3_000)),
     getMeta: (signal) => request('GET', '/api/meta', metaSchema, opts(signal)),
     createGuest: (input, signal) => request('POST', '/api/guests', guestSchema, opts(signal, input)),
+    getGuest: (id, signal) => request('GET', guestPath(id), guestSchema, opts(signal)),
     updateGuest: (id, input, signal) => request('PUT', guestPath(id), guestSchema, opts(signal, input)),
     getRecommendations: (id, signal) =>
       request('GET', `${guestPath(id)}/recommendations`, recommendationsResponseSchema, opts(signal)),
     getBookmarks: (id, signal) => request('GET', `${guestPath(id)}/bookmarks`, bookmarksSchema, opts(signal)),
     addBookmark: (id, exhibitorId, signal) =>
-      request('POST', `${guestPath(id)}/bookmarks`, bookmarksSchema, opts(signal, { exhibitorId })),
+      request('PUT', bookmarkPath(id, exhibitorId), bookmarksSchema, opts(signal)),
     removeBookmark: (id, exhibitorId, signal) =>
-      request('DELETE', `${guestPath(id)}/bookmarks`, bookmarksSchema, opts(signal, { exhibitorId })),
+      request('DELETE', bookmarkPath(id, exhibitorId), bookmarksSchema, opts(signal)),
     getRoute: (id, signal) => request('GET', `${guestPath(id)}/route`, routeSchema, opts(signal)),
   };
 }

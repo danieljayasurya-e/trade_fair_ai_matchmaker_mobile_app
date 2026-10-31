@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Shared API contract. Keep in sync with docs/mobile-api-contract.md.
+// Shared API contract (v1.1). Keep in sync with docs/mobile-api-contract.md.
 
 export const FREE_TEXT_MAX = 1000;
 
@@ -53,9 +53,16 @@ export const exhibitorSchema = z.object({
   name: z.string().min(1),
   description: z.string(),
   products: z.array(z.string()),
+  /** Product areas from meta.taxonomy; the "product category" filter. */
+  tags: z.array(z.string()),
   industries: z.array(z.string()),
+  /** The booth row inside Hall 1, e.g. "LC". The whole show is in one hall. */
   hall: z.string().min(1),
+  /** The visitor guide's code, e.g. "LC 24". */
   booth: z.string().min(1),
+  otherBooths: z.array(z.string()),
+  city: z.string(),
+  country: z.string(),
 });
 export type Exhibitor = z.infer<typeof exhibitorSchema>;
 
@@ -71,6 +78,12 @@ export const factorsSchema = z.object({
 });
 export type Factors = z.infer<typeof factorsSchema>;
 
+export const insightSchema = z.object({
+  label: z.string(),
+  why: z.string(),
+});
+export type Insight = z.infer<typeof insightSchema>;
+
 export const recommendationSchema = z.object({
   rank: z.number().int().min(1),
   exhibitor: exhibitorSchema,
@@ -78,6 +91,7 @@ export const recommendationSchema = z.object({
   matchedOn: z.array(z.string()),
   factors: factorsSchema,
   reason: z.string(),
+  insights: z.array(insightSchema),
 });
 export type Recommendation = z.infer<typeof recommendationSchema>;
 
@@ -109,4 +123,9 @@ export const apiErrorBodySchema = z.object({
     message: z.string(),
     details: z.unknown().optional(),
   }),
+});
+
+/** details of a 400 VALIDATION_ERROR: every invalid GuestInput field. */
+export const validationDetailsSchema = z.object({
+  fields: z.array(z.object({ field: z.string(), message: z.string() })),
 });

@@ -1,15 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppHeader } from '../components/AppHeader';
 import { Button } from '../components/Button';
-import { ModeChip } from '../components/ModeChip';
+import { LegalFooter } from '../components/LegalFooter';
 import { useSession } from '../store/sessionStore';
 import { font, radius, spacing, useTheme } from '../theme/theme';
 
 const POINTS = [
   { title: 'Matched both ways', body: 'A stall ranks high only if it sells what you need and you are the buyer it wants.' },
   { title: 'Explained, not guessed', body: 'Every match shows what it matched on and a score breakdown.' },
-  { title: 'Plan your day', body: 'Bookmark stalls, get a walking route by hall and take it with you as a PDF.' },
+  { title: 'Plan your day', body: 'Save stalls to a visit list, see your route on the map, then export it to take with you.' },
 ];
 
 export function LandingScreen() {
@@ -21,16 +21,18 @@ export function LandingScreen() {
   const goToResults = () => navigation.reset({ index: 1, routes: [{ name: 'Landing' }, { name: 'Main' }] });
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.topRow}>
-          <Text style={[styles.brand, { color: colors.accent }]}>MMI Matchmaker</Text>
-          <ModeChip />
+    <View style={[styles.safe, { backgroundColor: colors.background }]}>
+      <AppHeader howItWorks />
+      <ScrollView style={styles.safe} contentContainerStyle={styles.content}>
+        <View>
+          <Text style={[styles.eyebrow, { color: colors.teal }]}>AI visitor matchmaking</Text>
+          <Text style={[styles.hero, { color: colors.text }]} accessibilityRole="header">
+            150 stalls.{'\n'}Find your 30 in 2 seconds.
+          </Text>
+          <Text style={[styles.lead, { color: colors.textMuted }]}>
+            Tell us about your business and we rank every exhibitor by how well you fit each other.
+          </Text>
         </View>
-
-        <Text style={[styles.hero, { color: colors.text }]} accessibilityRole="header">
-          200 stalls.{'\n'}Find your 30 in 2 seconds.
-        </Text>
 
         <View style={styles.points}>
           {POINTS.map((p) => (
@@ -42,7 +44,7 @@ export function LandingScreen() {
         </View>
 
         {guest ? (
-          <>
+          <View style={styles.actions}>
             <Button label={`Continue as ${guest.name}`} onPress={goToResults} testID="continue" />
             <Button
               label="Not you? Start over"
@@ -52,23 +54,25 @@ export function LandingScreen() {
                 navigation.navigate('Details');
               }}
             />
-          </>
+          </View>
         ) : (
           <Button label="Find my stalls" onPress={() => navigation.navigate('Details')} testID="find-my-stalls" />
         )}
       </ScrollView>
-    </SafeAreaView>
+      <LegalFooter />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  content: { padding: spacing.xl, gap: spacing.lg, flexGrow: 1, justifyContent: 'center' },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  brand: { fontSize: font.small, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
-  hero: { fontSize: font.hero, fontWeight: '800', lineHeight: 40 },
-  points: { gap: spacing.md, marginVertical: spacing.md },
-  point: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg },
-  pointTitle: { fontSize: font.body, fontWeight: '700', marginBottom: spacing.xs },
+  content: { paddingHorizontal: spacing.lg + 4, paddingVertical: spacing.xl, gap: spacing.xl, flexGrow: 1, justifyContent: 'center' },
+  eyebrow: { fontSize: font.meta, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase', textAlign: 'center', marginBottom: spacing.sm + 2 },
+  hero: { fontSize: font.hero, fontWeight: '700', lineHeight: 38, letterSpacing: -0.6, textAlign: 'center', marginBottom: spacing.md },
+  lead: { fontSize: font.body, lineHeight: 24, textAlign: 'center' },
+  points: { gap: spacing.md },
+  point: { borderWidth: 1, borderRadius: radius.md, paddingVertical: spacing.lg, paddingHorizontal: spacing.lg + 2 },
+  pointTitle: { fontSize: font.body, lineHeight: 22, fontWeight: '600', marginBottom: spacing.xs },
   pointBody: { fontSize: font.small, lineHeight: 20 },
+  actions: { gap: spacing.sm },
 });

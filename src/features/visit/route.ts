@@ -1,7 +1,7 @@
 import type { Recommendation, Route } from '../../api/schemas';
 import { naturalCompare } from '../../utils/naturalSort';
 
-/** Groups stalls by hall (A, B, C…) and orders each hall by booth in natural order (B-2 before B-10). */
+/** Groups stalls by booth row (LA, LB…) and orders each row by booth in natural order (LA 2 before LA 10). */
 export function planRoute(stalls: Recommendation[]): Route {
   const byHall = new Map<string, Recommendation[]>();
   for (const s of stalls) {

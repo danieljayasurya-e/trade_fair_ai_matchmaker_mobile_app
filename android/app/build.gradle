@@ -75,6 +75,13 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+/**
+ * Codegen object paths overflow the 260 character limit of the ninja bundled with
+ * CMake 3.22.1 on Windows. Build in a short directory at the drive root and let
+ * CMake hash whatever is still too long, so no machine-wide long path setup is needed.
+ */
+def isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -88,6 +95,20 @@ android {
         versionCode 1
         versionName "1.0"
         resValue "string", "build_config_package", "com.mmipoc"
+        if (isWindows) {
+            externalNativeBuild {
+                cmake {
+                    arguments "-DCMAKE_OBJECT_PATH_MAX=250"
+                }
+            }
+        }
+    }
+    if (isWindows) {
+        externalNativeBuild {
+            cmake {
+                buildStagingDirectory = new File(rootDir.toPath().root.toFile(), ".cxx-mmipoc")
+            }
+        }
     }
     signingConfigs {
         debug {

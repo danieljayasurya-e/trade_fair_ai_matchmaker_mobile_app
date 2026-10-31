@@ -52,6 +52,9 @@ export function ProfileScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content}>
+      <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">
+        Your profile
+      </Text>
       {guest ? (
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.name, { color: colors.text }]}>{guest.name}</Text>
@@ -99,8 +102,9 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: spacing.lg, gap: spacing.lg },
-  card: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.xs },
-  name: { fontSize: font.title, fontWeight: '700' },
+  title: { fontSize: font.screen, lineHeight: 28, fontWeight: '700' },
+  card: { borderWidth: 1, borderRadius: radius.md, padding: spacing.lg, gap: spacing.xs },
+  name: { fontSize: font.section, fontWeight: '600' },
   sub: { fontSize: font.small, lineHeight: 20 },
   section: { fontSize: font.body, fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.xs, gap: spacing.md },

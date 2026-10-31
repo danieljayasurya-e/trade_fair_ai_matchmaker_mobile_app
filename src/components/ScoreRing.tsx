@@ -1,15 +1,17 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import { useTheme } from '../theme/theme';
+import { scoreBand, useTheme } from '../theme/theme';
 
 interface Props {
   score: number;
   size?: number;
+  /** Adds the % sign; the small ring on cards shows the bare number. */
+  percent?: boolean;
 }
 
-export function ScoreRing({ score, size = 56 }: Props) {
+export function ScoreRing({ score, size = 44, percent }: Props) {
   const { colors } = useTheme();
-  const stroke = 5;
+  const stroke = size >= 64 ? 8 : 5;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(100, score));
@@ -22,16 +24,15 @@ export function ScoreRing({ score, size = 56 }: Props) {
       accessibilityRole="image"
     >
       <Svg width={size} height={size}>
-        <Circle cx={size / 2} cy={size / 2} r={r} stroke={colors.surfaceAlt} strokeWidth={stroke} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={colors.border} strokeWidth={stroke} fill="none" />
         <Circle
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke={colors.accent}
+          stroke={scoreBand(pct, colors).color}
           strokeWidth={stroke}
           fill="none"
-          strokeDasharray={`${c} ${c}`}
-          strokeDashoffset={c * (1 - pct / 100)}
+          strokeDasharray={`${(pct / 100) * c} ${c}`}
           strokeLinecap="round"
           rotation={-90}
           origin={`${size / 2}, ${size / 2}`}
@@ -39,8 +40,9 @@ export function ScoreRing({ score, size = 56 }: Props) {
       </Svg>
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <View style={styles.center}>
-          <Text style={[styles.value, { color: colors.text, fontSize: size * 0.28 }]} allowFontScaling={false}>
-            {pct}%
+          <Text style={[styles.value, { color: colors.text, fontSize: size * 0.3 }]} allowFontScaling={false}>
+            {pct}
+            {percent ? '%' : ''}
           </Text>
         </View>
       </View>

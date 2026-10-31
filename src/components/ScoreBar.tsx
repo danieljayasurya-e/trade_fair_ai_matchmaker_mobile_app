@@ -5,6 +5,7 @@ interface Props {
   label: string;
   /** 0–1 */
   value: number;
+  /** Read out by screen readers. */
   hint?: string;
 }
 
@@ -19,22 +20,20 @@ export function ScoreBar({ label, value, hint }: Props) {
     >
       <View style={styles.header}>
         <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
-        <Text style={[styles.value, { color: colors.textMuted }]}>{pct}%</Text>
+        <Text style={[styles.value, { color: colors.text }]}>{pct}%</Text>
       </View>
-      <View style={[styles.track, { backgroundColor: colors.surfaceAlt }]}>
+      <View style={[styles.track, { backgroundColor: colors.border }]}>
         <View style={[styles.fill, { width: `${pct}%`, backgroundColor: colors.accent }]} />
       </View>
-      {hint ? <Text style={[styles.hint, { color: colors.textMuted }]}>{hint}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { marginBottom: spacing.md },
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xs },
-  label: { fontSize: font.small, fontWeight: '600', flexShrink: 1 },
-  value: { fontSize: font.small, fontVariant: ['tabular-nums'] },
+  row: { gap: spacing.xs + 2 },
+  header: { flexDirection: 'row', justifyContent: 'space-between' },
+  label: { fontSize: font.small, fontWeight: '500', flexShrink: 1 },
+  value: { fontSize: font.small, fontWeight: '700', fontVariant: ['tabular-nums'] },
   track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: radius.pill },
-  hint: { fontSize: font.caption, marginTop: 2 },
 });

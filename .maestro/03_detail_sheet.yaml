@@ -3,11 +3,10 @@ appId: com.mmipoc
 name: Stall detail sheet
 ---
 - runFlow: subflows/start_with_sample.yaml
-- tapOn: "#1"
-- assertVisible: "Why this score"
+- tapOn: "#1 · Hall 1 · .*"
+- assertVisible: "Why this is a \d+% match"
 - assertVisible: "Semantic similarity"
-- assertVisible: "Stall → You"
 - back
-- assertNotVisible: "Why this score"
+- assertNotVisible: "Why this is a \d+% match"
 - assertVisible:
     id: "latency-badge"

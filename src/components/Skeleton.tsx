@@ -5,7 +5,7 @@ import { radius, spacing, useTheme } from '../theme/theme';
 
 function Block({ width, height }: { width: DimensionValue; height: number }) {
   const { colors } = useTheme();
-  return <View style={{ width, height, borderRadius: radius.sm, backgroundColor: colors.skeleton }} />;
+  return <View style={{ width, height, borderRadius: radius.xs, backgroundColor: colors.skeleton }} />;
 }
 
 export function SkeletonCard() {
@@ -22,25 +22,18 @@ export function SkeletonCard() {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
-      <View style={styles.row}>
-        <View style={styles.grow}>
-          <Block width="70%" height={18} />
-          <View style={styles.gap} />
-          <Block width="40%" height={14} />
-        </View>
-        <View style={[styles.ring, { backgroundColor: colors.skeleton }]} />
+      <View style={[styles.ring, { backgroundColor: colors.skeleton }]} />
+      <View style={styles.grow}>
+        <Block width="55%" height={14} />
+        <Block width="80%" height={10} />
       </View>
-      <View style={styles.gap} />
-      <Block width="90%" height={14} />
-      <View style={styles.gap} />
-      <Block width="60%" height={14} />
     </Animated.View>
   );
 }
 
 export function SkeletonList({ count = 5 }: { count?: number }) {
   return (
-    <View accessibilityLabel="Loading recommendations" accessibilityRole="progressbar">
+    <View style={styles.list} accessibilityLabel="Loading recommendations" accessibilityRole="progressbar">
       {Array.from({ length: count }, (_, i) => (
         <SkeletonCard key={i} />
       ))}
@@ -49,15 +42,16 @@ export function SkeletonList({ count = 5 }: { count?: number }) {
 }
 
 const styles = StyleSheet.create({
+  list: { gap: spacing.md, padding: spacing.lg },
   card: {
+    height: 96,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md + 2,
     borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
   },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  grow: { flex: 1 },
-  gap: { height: spacing.sm },
-  ring: { width: 56, height: 56, borderRadius: 28 },
+  grow: { flex: 1, gap: spacing.sm },
+  ring: { width: 44, height: 44, borderRadius: radius.pill },
 });

@@ -22,12 +22,29 @@ describe('http client', () => {
     expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/guests/g1/bookmarks`, expect.objectContaining({ method: 'GET' }));
   });
 
-  it('sends JSON bodies for POST', async () => {
-    mockFetch(async () => jsonResponse(200, { exhibitorIds: ['ex-1'] }));
-    await createHttpClient(BASE).addBookmark('g1', 'ex-1');
-    const init = (globalThis.fetch as jest.Mock).mock.calls[0][1] as RequestInit;
-    expect(init.method).toBe('POST');
-    expect(JSON.parse(init.body as string)).toEqual({ exhibitorId: 'ex-1' });
+  it('saves and removes bookmarks with the id in the path and no body', async () => {
+    mockFetch(async () => jsonResponse(200, { exhibitorIds: [] }));
+    const client = createHttpClient(BASE);
+    await client.addBookmark('g1', 'ex/1');
+    await client.removeBookmark('g1', 'ex/1');
+    const calls = (globalThis.fetch as jest.Mock).mock.calls as [string, RequestInit][];
+    expect(calls.map(([url, init]) => [url, init.method, init.body])).toEqual([
+      [`${BASE}/api/guests/g1/bookmarks/ex%2F1`, 'PUT', undefined],
+      [`${BASE}/api/guests/g1/bookmarks/ex%2F1`, 'DELETE', undefined],
+    ]);
+  });
+
+  it('fetches a guest for resync', async () => {
+    const guest = { id: 'g1', updatedAt: '2026-10-30T09:15:22.481Z', name: 'A', industry: 'I', jobRole: 'R', seniority: 'S', companySize: '1-10', region: 'R', interests: ['T'], freeText: '' };
+    mockFetch(async () => jsonResponse(200, guest));
+    await expect(createHttpClient(BASE).getGuest('g1')).resolves.toEqual(guest);
+    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/guests/g1`, expect.objectContaining({ method: 'GET' }));
+  });
+
+  it('keeps the field list of a validation error', async () => {
+    const fields = [{ field: 'name', message: 'Please enter your name' }];
+    mockFetch(async () => jsonResponse(400, { error: { code: 'VALIDATION_ERROR', message: 'Invalid', details: { fields } } }));
+    await expect(createHttpClient(BASE).getMeta()).rejects.toMatchObject({ code: 'VALIDATION_ERROR', details: { fields } });
   });
 
   it('maps the error envelope on 404', async () => {

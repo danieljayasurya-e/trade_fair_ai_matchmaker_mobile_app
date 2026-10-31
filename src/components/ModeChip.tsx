@@ -2,29 +2,32 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSession } from '../store/sessionStore';
 import { font, radius, spacing, useTheme } from '../theme/theme';
 
-/** Always visible in mock mode so demo data is never mistaken for the real engine. */
+/** "Live" on the real API; always "Demo data" in mock mode so it is never mistaken for the real engine. */
 export function ModeChip() {
   const mode = useSession((s) => s.mode);
   const { colors } = useTheme();
-  if (mode !== 'mock') return null;
+  const mock = mode === 'mock';
   return (
     <View
-      style={[styles.chip, { backgroundColor: colors.surfaceAlt, borderColor: colors.warning }]}
+      style={[styles.chip, { backgroundColor: mock ? colors.surfaceAlt : colors.successSoft }]}
       accessible
-      accessibilityLabel="Showing demo data, not the live matching engine"
+      accessibilityLabel={mock ? 'Showing demo data, not the live matching engine' : 'Connected to the live matching engine'}
     >
-      <Text style={[styles.text, { color: colors.warning }]}>Demo data</Text>
+      <View style={[styles.dot, { backgroundColor: mock ? colors.warning : colors.success }]} />
+      <Text style={[styles.text, { color: mock ? colors.warning : colors.onSuccessSoft }]}>{mock ? 'Demo data' : 'Live'}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   chip: {
-    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs + 2,
     borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    marginRight: spacing.sm,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
   },
-  text: { fontSize: font.caption, fontWeight: '700' },
+  dot: { width: 7, height: 7, borderRadius: radius.pill },
+  text: { fontSize: font.caption, fontWeight: '600' },
 });

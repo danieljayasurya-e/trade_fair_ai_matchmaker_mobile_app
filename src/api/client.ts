@@ -14,6 +14,7 @@ export interface ApiClient {
   health(signal?: AbortSignal): Promise<Health>;
   getMeta(signal?: AbortSignal): Promise<Meta>;
   createGuest(input: GuestInput, signal?: AbortSignal): Promise<Guest>;
+  getGuest(id: string, signal?: AbortSignal): Promise<Guest>;
   updateGuest(id: string, input: GuestInput, signal?: AbortSignal): Promise<Guest>;
   getRecommendations(guestId: string, signal?: AbortSignal): Promise<RecommendationsResponse>;
   getBookmarks(guestId: string, signal?: AbortSignal): Promise<Bookmarks>;

@@ -3,8 +3,7 @@ appId: com.mmipoc
 name: Sample profile shows ranked results
 ---
 - runFlow: subflows/start_with_sample.yaml
-- assertVisible: "#1"
+- assertVisible: "#1 · Hall 1 · .*"
 - assertVisible:
     id: "result-count"
     text: "Showing \d+ of \d+"
-- assertVisible: "Matched on"

@@ -4,17 +4,22 @@ const validRec = {
   rank: 1,
   exhibitor: {
     id: 'ex-1',
-    name: 'Kinetix',
-    description: 'PLCs',
-    products: ['PLC'],
-    industries: ['Manufacturing'],
-    hall: 'A',
-    booth: 'A-2',
+    name: 'Winarc',
+    description: 'CNC cutters',
+    products: ['CNC fiber laser cutting machines'],
+    tags: ['Laser Sources'],
+    industries: ['Automotive & EV'],
+    hall: 'LC',
+    booth: 'LC 01',
+    otherBooths: [],
+    city: '',
+    country: 'India',
   },
   score: 87,
-  matchedOn: ['Industrial Automation'],
+  matchedOn: ['Laser Sources'],
   factors: { semantic: 0.8, interest: 0.9, intent: 0.7, buyerFit: 1, g2e: 0.8, e2g: 1 },
-  reason: 'Offers PLCs.',
+  reason: 'Offers cutters.',
+  insights: [{ label: 'Laser Sources', why: 'Matches your interest.' }],
 };
 
 describe('recommendation schema', () => {
@@ -30,6 +35,9 @@ describe('recommendation schema', () => {
     ['factor above 1', { ...validRec, factors: { ...validRec.factors, semantic: 1.2 } }],
     ['missing exhibitor', { ...validRec, exhibitor: undefined }],
     ['missing booth', { ...validRec, exhibitor: { ...validRec.exhibitor, booth: undefined } }],
+    ['missing tags', { ...validRec, exhibitor: { ...validRec.exhibitor, tags: undefined } }],
+    ['null city', { ...validRec, exhibitor: { ...validRec.exhibitor, city: null } }],
+    ['missing insights', { ...validRec, insights: undefined }],
   ])('rejects %s', (_label, value) => {
     expect(recommendationSchema.safeParse(value).success).toBe(false);
   });
@@ -47,12 +55,12 @@ describe('recommendation schema', () => {
 describe('guest input schema', () => {
   const base = {
     name: 'Asha',
-    industry: 'Manufacturing',
+    industry: 'Automotive & EV',
     jobRole: 'Buyer',
     seniority: 'Manager',
     companySize: '51-200',
     region: 'West India',
-    interests: ['Robotics'],
+    interests: ['Laser Sources'],
     freeText: '',
   };
 

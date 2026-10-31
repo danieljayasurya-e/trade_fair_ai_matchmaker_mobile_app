@@ -1,21 +1,29 @@
 import { onlineManager, QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
 import { applyOps, flushQueue, loadQueue, queueOp } from '../features/bookmarks/queue';
+import { useMatchTiming } from '../store/matchTimingStore';
 import { useRankChanges } from '../store/rankChangesStore';
 import { useSession } from '../store/sessionStore';
 import { keys, readJsonSync, writeJson } from '../storage/storage';
 import { getClient } from './index';
-import { isApiError } from './client';
+import { isApiError, type ApiClient } from './client';
 import { recommendationsResponseSchema, type Bookmarks, type GuestInput } from './schemas';
 
-const NO_RETRY = new Set(['ABORTED', 'BAD_REQUEST', 'NOT_FOUND', 'INVALID_RESPONSE']);
+const NO_RETRY = new Set(['ABORTED', 'INVALID_RESPONSE']);
+
+/** A 4xx means the request is wrong (contract §2), so retrying can't help. */
+function isRetryable(error: unknown): boolean {
+  if (!isApiError(error)) return true;
+  if (NO_RETRY.has(error.code)) return false;
+  return !(error.status !== undefined && error.status >= 400 && error.status < 500);
+}
 
 export function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
         // One automatic retry with backoff, except for errors a retry can't fix.
-        retry: (count, error) => count < 1 && !(isApiError(error) && NO_RETRY.has(error.code)),
+        retry: (count, error) => count < 1 && isRetryable(error),
         retryDelay: (attempt) => 800 * 2 ** attempt,
         staleTime: 30_000,
       },
@@ -66,7 +74,9 @@ export function useRecommendations() {
     // TanStack Query aborts the signal when a newer request for the same key starts,
     // so a profile edit cancels the stale request and only the latest result renders.
     queryFn: async ({ signal }) => {
+      const started = Date.now();
       const data = await client.getRecommendations(guestId!, signal);
+      useMatchTiming.getState().set(Date.now() - started);
       void writeJson(keys.cachedRecommendations(guestId!), data);
       return data;
     },
@@ -184,6 +194,22 @@ export function useSaveGuest() {
   });
 }
 
+/**
+ * Picks up edits made on another device (setGuest enforces last-write-wins). If the server
+ * no longer knows this guest, for example after a backend reset, re-creates them from the
+ * profile on this phone. Saved stalls on the server are gone in that case.
+ */
+async function resyncGuest(client: ApiClient, guestId: string) {
+  const { setGuest, guest } = useSession.getState();
+  try {
+    setGuest(await client.getGuest(guestId));
+  } catch (e) {
+    if (!guest || !isApiError(e) || e.status !== 404) return;
+    const { id: _id, updatedAt: _u, ...input } = guest;
+    setGuest(await client.createGuest(input).catch(() => guest));
+  }
+}
+
 /** When the network returns: replay queued bookmark changes, then resync everything for this guest. */
 export function useSyncOnReconnect() {
   const qc = useQueryClient();
@@ -194,6 +220,7 @@ export function useSyncOnReconnect() {
     if (mode !== 'http' || !guestId) return;
     const client = getClient(mode);
     const sync = async () => {
+      await resyncGuest(client, guestId);
       await flushQueue(client, guestId);
       await qc.invalidateQueries({
         predicate: (q) => q.queryKey[1] === mode && q.queryKey[2] === guestId,

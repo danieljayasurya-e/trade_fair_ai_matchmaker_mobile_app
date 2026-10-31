@@ -1,9 +1,10 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { generatePDF } from 'react-native-html-to-pdf';
 import Share from 'react-native-share';
 import App from '../App';
 import { getClient } from '../api';
 import { ApiError } from '../api/client';
+import { META } from '../api/mock/fixtures';
 import { useFilters } from '../store/filtersStore';
 import { useRankChanges } from '../store/rankChangesStore';
 import { resetSession } from '../store/sessionStore';
@@ -19,7 +20,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   clearAllStorage();
   resetSession();
-  useFilters.setState({ minScore: 0, industries: [], halls: [], products: [], sortBy: 'score', search: '' });
+  useFilters.setState({ minScore: 0, industries: [], halls: [], categories: [], savedOnly: false, sortBy: 'score', search: '' });
   useRankChanges.setState({ previous: null });
 });
 
@@ -29,11 +30,12 @@ async function openForm() {
   await screen.findByText('Try a sample profile', {}, WAIT);
 }
 
-async function startWithSample(id = 'sample-factory-owner') {
+async function startWithSample(id = 'sample-fabrication-owner') {
   await openForm();
   await fireEvent.press(screen.getByTestId(`sample-${id}`));
   await fireEvent.press(screen.getByTestId('submit-profile'));
-  await waitFor(() => expect(screen.getByTestId('latency-badge')).toHaveTextContent(/^Top \d+ in \d+ ms$/), WAIT);
+  await fireEvent.press(await screen.findByTestId('view-results', {}, WAIT));
+  await waitFor(() => expect(screen.getByTestId('latency-badge')).toHaveTextContent(/^\d+\.\d\d s · Demo data$/), WAIT);
 }
 
 describe('guest flow (demo data)', () => {
@@ -41,7 +43,26 @@ describe('guest flow (demo data)', () => {
     await startWithSample();
     expect(screen.getByText('Demo data')).toBeTruthy();
     expect(screen.getByTestId('result-count')).toHaveTextContent(/^Showing (\d+) of \1$/);
-    expect(screen.getByText('#1')).toBeTruthy();
+    expect(screen.getByText(/^#1 · Hall 1 · L[A-F] \d+$/)).toBeTruthy();
+    expect(screen.getByText(/^Your top \d+$/)).toBeTruthy();
+  });
+
+  it('shows the matching screen with the timer before the results', async () => {
+    await openForm();
+    await fireEvent.press(screen.getByTestId('sample-sample-fabrication-owner'));
+    expect(screen.getByText(/^Filled in Rajesh Kumar's details\./)).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('submit-profile'));
+    expect(await screen.findByText("Matching Rajesh's profile", {}, WAIT)).toBeTruthy();
+    await screen.findByTestId('view-results', {}, WAIT);
+    expect(screen.getByTestId('match-timer')).toHaveTextContent(/^\d+\.\d\d s$/);
+    expect(screen.getByText(/using demo data\.$/)).toBeTruthy();
+  });
+
+  it('shows the sample profiles from meta, three first and the rest on demand', async () => {
+    await openForm();
+    expect(screen.getAllByText('Use this sample')).toHaveLength(3);
+    await fireEvent.press(screen.getByTestId('show-all-samples'));
+    expect(screen.getAllByText('Use this sample')).toHaveLength(META.sampleProfiles.length);
   });
 
   it('blocks submit and shows inline errors when required fields are missing', async () => {
@@ -53,17 +74,20 @@ describe('guest flow (demo data)', () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it('filters by hall, shows the chip, and clears', async () => {
+  it('filters by booth row, shows the chip, and clears', async () => {
     await startWithSample();
     const total = screen.getByTestId('result-count').props.children.at(-1);
 
     await fireEvent.press(screen.getByTestId('open-filters'));
-    await fireEvent.press(screen.getByLabelText('Hall A'));
-    await fireEvent.press(screen.getByText(/^Show \d+$/));
+    const rowOption = screen.getAllByLabelText(/^Row L[A-F]$/)[0];
+    const row = (rowOption.props.accessibilityLabel as string).replace('Row ', '');
+    await fireEvent.press(rowOption);
+    await fireEvent.press(screen.getByTestId('apply-filters'));
 
-    expect(screen.queryAllByText(/^Hall [B-F] · Booth/)).toHaveLength(0);
-    expect(screen.getAllByText(/^Hall A · Booth/).length).toBeGreaterThan(0);
-    expect(screen.getByLabelText('Remove filter Hall A')).toBeTruthy();
+    const metas = screen.getAllByText(/^#\d+ · Hall 1 · /);
+    expect(metas.length).toBeGreaterThan(0);
+    for (const m of metas) expect(m).toHaveTextContent(new RegExp(` ${row} \\d+$`));
+    expect(screen.getByLabelText(`Remove filter Row ${row}`)).toBeTruthy();
 
     await fireEvent.press(screen.getByText('Clear all'));
     expect(screen.getByTestId('result-count')).toHaveTextContent(`Showing ${total} of ${total}`);
@@ -80,9 +104,26 @@ describe('guest flow (demo data)', () => {
   it('opens the stall detail sheet with the score breakdown', async () => {
     await startWithSample();
     await fireEvent.press(screen.getAllByLabelText(/^Rank 1\./)[0]);
-    expect(await screen.findByText('Why this score')).toBeTruthy();
+    expect(await screen.findByText(/^Why this is a \d+% match$/)).toBeTruthy();
     expect(screen.getByLabelText(/^Semantic similarity: \d+ percent/)).toBeTruthy();
-    expect(screen.getByLabelText(/^Stall → You: \d+ percent/)).toBeTruthy();
+    expect(screen.getByLabelText(/^You to stall \d+ percent\. Stall to you \d+ percent\.$/)).toBeTruthy();
+    expect(screen.getByTestId('detail-map')).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText('Next exhibitor'));
+    expect(screen.getByText(/· Rank #2 of \d+ exhibitors$/)).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Previous exhibitor'));
+    expect(screen.getByText(/· Rank #1 of \d+ exhibitors$/)).toBeTruthy();
+  });
+
+  it('shows saved stalls as numbered stops on the map and opens one', async () => {
+    await startWithSample();
+    await fireEvent.press(screen.getAllByLabelText(/^Save .* to visit list$/)[0]);
+    await fireEvent.press(screen.getByText('Map'));
+    expect(await screen.findByText('Hall 1 map', {}, WAIT)).toBeTruthy();
+    const stop = await screen.findByLabelText(/^Stop 1, .*, booth L[A-F] \d+$/, {}, WAIT);
+    expect(screen.getByText('Your route · 1 stop')).toBeTruthy();
+    await fireEvent.press(stop);
+    expect(await screen.findByText(/^Why this is a \d+% match$/)).toBeTruthy();
   });
 
   it('sends one request for a rapid double tap on bookmark, then plans a route and exports a PDF', async () => {
@@ -102,7 +143,7 @@ describe('guest flow (demo data)', () => {
     expect(screen.getByText('2 stalls · swipe left to remove')).toBeTruthy();
 
     await fireEvent.press(screen.getByTestId('plan-route'));
-    expect(screen.getAllByText(/^Hall [A-F] · \d (stop|stops)$/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^Hall 1, Row L[A-F] · \d (stop|stops)$/).length).toBeGreaterThan(0);
 
     await fireEvent.press(screen.getByTestId('download-pdf'));
     await waitFor(() => expect(Share.open).toHaveBeenCalledTimes(1), WAIT);
@@ -124,8 +165,8 @@ describe('guest flow (demo data)', () => {
     await startWithSample();
     await fireEvent.press(screen.getByText('Profile'));
     await fireEvent.press(await screen.findByText('Edit my details'));
-    await fireEvent.press(await screen.findByLabelText('Procurement interests: Sustainable Packaging', {}, WAIT));
-    await fireEvent.press(screen.getByLabelText('Procurement interests: Water Treatment'));
+    await fireEvent.press(await screen.findByLabelText('Procurement interests: Quantum Technologies', {}, WAIT));
+    await fireEvent.press(screen.getByLabelText('Procurement interests: Laser Safety'));
     await fireEvent.press(screen.getByTestId('submit-profile'));
 
     await waitFor(
@@ -137,10 +178,10 @@ describe('guest flow (demo data)', () => {
   it('shows an error state with Retry when the engine fails', async () => {
     jest.spyOn(mock, 'getRecommendations').mockRejectedValue(new ApiError('SERVER', 'Engine exploded', 500));
     await openForm();
-    await fireEvent.press(screen.getByTestId('sample-sample-startup-cto'));
+    await fireEvent.press(screen.getByTestId('sample-sample-research-lab'));
     await fireEvent.press(screen.getByTestId('submit-profile'));
-    const title = await screen.findByText("Couldn't load your matches", {}, { timeout: 8_000 });
-    expect(within(title.parent!.parent!).getByText('Retry')).toBeTruthy();
+    await screen.findByText("Couldn't load your matches", {}, { timeout: 8_000 });
+    expect(screen.getByText('Retry')).toBeTruthy();
     expect(screen.getByText('Engine exploded')).toBeTruthy();
   });
 });

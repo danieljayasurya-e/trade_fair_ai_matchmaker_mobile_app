@@ -62,7 +62,7 @@ For a physical iPhone, open `ios/mmipoc.xcworkspace` in Xcode, pick your team un
    ```
 4. **Rebuild**: `npm run android`. `.env` is baked in at build time, so a Metro reload is not enough.
 
-On the Android emulator, `http://localhost:4000` works as-is (the app rewrites it to `10.0.2.2`). Plain HTTP is allowed in debug builds only.
+On the Android emulator, `http://localhost:4000` works as-is (the app rewrites it to `10.0.2.2`). Debug builds allow plain HTTP to any host. Release builds allow it only to the deployed API, `http://92.4.77.213`, which is the default when `.env` doesn't set `API_URL`.
 
 If `/api/health` doesn't answer within 3 s at startup, the app falls back to demo data and shows a **Demo data** chip in the header.
 
@@ -71,7 +71,7 @@ If `/api/health` doesn't answer within 3 s at startup, the app falls back to dem
 - **At build time:** `USE_MOCK=true` in `.env`, then rebuild.
 - **During the demo, no rebuild:** Profile tab → **Data source** → *Demo data* / *Live API*. The choice is remembered on the device.
 
-Demo data is 60 synthetic exhibitors in halls A–F with a deterministic local scorer, so results change when the profile changes. It needs no network.
+Demo data is a snapshot of the live API (144 exhibitors in booth rows LA–LF, and the 10 sample profiles) with a deterministic local scorer, so results change when the profile changes. It needs no network.
 
 ## Tests
 
@@ -95,9 +95,9 @@ End-to-end flows need [Maestro](https://maestro.dev) installed and the app alrea
 
 From `docs/final-flow.md`. Before going on stage: install the APK with the JS bundled in, charge the phone, and pick the data source on the Profile tab.
 
-1. Open the app → **Find my stalls** → tap **Factory owner, automation buyer** → **Find my stalls**. The top 30 appear with the "Top 30 in N ms" badge.
-2. Tap **Filter** → Hall A → **Show**. Open the #1 stall and walk through the score bars and "Matched on" chips. Press back to close the sheet.
-3. Bookmark three stalls (☆) → **Visit list** tab → **Plan my route** (grouped by hall, ordered by booth) → **Download PDF** → share or save it.
+1. Open the app → **Find my stalls** → **Use this sample** on the sheet-metal shop owner → **Find my stalls**. The matching screen shows the live timer → **View your top 30**.
+2. Tap **Filters** → pick a booth row → **Show N matches**. Open the #1 stall and walk through the score bars and "why" list. Press back to close the sheet.
+3. Bookmark three stalls → **Visit list** tab → **Plan my route** (grouped by row, ordered by booth) → **Map** tab to see the numbered stops → back to **Download PDF** → share or save it.
 4. Profile → **Edit my details** → change interests → **Save and update matches**. Cards glide to their new ranks with ↑/↓ badges.
 
 Live sync with the web app and exhibitor portal (Socket.io) is not built yet; it needs the backend socket events in `docs/mobile-api-contract.md`. Changes made on the web show on the phone after pull to refresh or reopening the app.

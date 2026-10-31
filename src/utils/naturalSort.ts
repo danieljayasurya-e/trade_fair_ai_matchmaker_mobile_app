@@ -1,6 +1,6 @@
 const CHUNK = /(\d+)|(\D+)/g;
 
-/** Natural order for booth codes: "B-2" sorts before "B-10". Independent of the JS engine's Intl support. */
+/** Natural order for booth codes: "LA 2" sorts before "LA 10". Independent of the JS engine's Intl support. */
 export function naturalCompare(a: string, b: string): number {
   const ca = a.toLowerCase().match(CHUNK) ?? [];
   const cb = b.toLowerCase().match(CHUNK) ?? [];

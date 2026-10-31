@@ -13,18 +13,17 @@ interface Props {
 
 export function Chip({ label, selected, onPress, compact, tone = 'neutral', accessibilityLabel }: Props) {
   const { colors } = useTheme();
-  const active = selected || tone === 'accent';
-  const bg = selected ? colors.accent : tone === 'accent' ? colors.accentSoft : colors.surfaceAlt;
-  const fg = selected ? colors.onAccent : active ? colors.accent : colors.text;
+  const bg = selected ? colors.accent : onPress ? colors.surface : tone === 'accent' ? colors.tealSoft : colors.surfaceAlt;
+  const fg = selected ? colors.onAccent : tone === 'accent' ? colors.teal : colors.text;
 
   const content = (
-    <Text style={[styles.text, compact && styles.textCompact, { color: fg }]} numberOfLines={1}>
+    <Text style={[styles.text, compact && styles.textCompact, onPress && styles.textInteractive, { color: fg }]} numberOfLines={onPress ? 1 : 2}>
       {label}
     </Text>
   );
 
   if (!onPress) {
-    return <View style={[styles.base, compact && styles.compact, { backgroundColor: bg }]}>{content}</View>;
+    return <View style={[styles.tag, compact && styles.compact, { backgroundColor: bg }]}>{content}</View>;
   }
   return (
     <Pressable
@@ -32,11 +31,9 @@ export function Chip({ label, selected, onPress, compact, tone = 'neutral', acce
       accessibilityRole="checkbox"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ checked: !!selected }}
-      hitSlop={4}
       style={({ pressed }) => [
-        styles.base,
-        styles.interactive,
-        { backgroundColor: bg, borderColor: selected ? colors.accent : colors.border, opacity: pressed ? 0.8 : 1 },
+        styles.pill,
+        { backgroundColor: bg, borderColor: selected ? colors.accent : colors.outline, opacity: pressed ? 0.8 : 1 },
       ]}
     >
       {content}
@@ -45,14 +42,22 @@ export function Chip({ label, selected, onPress, compact, tone = 'neutral', acce
 }
 
 const styles = StyleSheet.create({
-  base: {
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
+  tag: {
+    borderRadius: radius.xs,
+    paddingHorizontal: spacing.sm + 2,
     paddingVertical: spacing.xs + 2,
     maxWidth: '100%',
   },
-  interactive: { minHeight: TOUCH - 8, justifyContent: 'center', borderWidth: 1 },
   compact: { paddingHorizontal: spacing.sm, paddingVertical: 2 },
-  text: { fontSize: font.small, fontWeight: '500' },
-  textCompact: { fontSize: font.caption },
+  pill: {
+    minHeight: TOUCH,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.lg + 2,
+    maxWidth: '100%',
+  },
+  text: { fontSize: font.small },
+  textCompact: { fontSize: font.caption, fontWeight: '500' },
+  textInteractive: { fontWeight: '600' },
 });

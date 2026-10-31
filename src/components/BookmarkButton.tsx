@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
-import { TOUCH, font, useTheme } from '../theme/theme';
+import { Pressable, StyleSheet } from 'react-native';
+import { radius, TOUCH, useTheme } from '../theme/theme';
+import { BookmarkIcon } from './icons';
 
 interface Props {
   saved: boolean;
@@ -14,18 +15,19 @@ export function BookmarkButton({ saved, onToggle, name, disabled }: Props) {
     <Pressable
       onPress={onToggle}
       disabled={disabled}
-      hitSlop={6}
-      style={styles.btn}
+      style={[
+        styles.btn,
+        { backgroundColor: saved ? colors.accentSoft : colors.surface, borderColor: saved ? colors.accent : colors.border },
+      ]}
       accessibilityRole="button"
       accessibilityLabel={saved ? `Remove ${name} from visit list` : `Save ${name} to visit list`}
       accessibilityState={{ selected: saved, disabled: !!disabled }}
     >
-      <Text style={[styles.icon, { color: saved ? colors.accent : colors.textMuted }]}>{saved ? '★' : '☆'}</Text>
+      <BookmarkIcon color={saved ? colors.onAccentSoft : colors.text} filled={saved} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  btn: { width: TOUCH, height: TOUCH, alignItems: 'center', justifyContent: 'center' },
-  icon: { fontSize: font.heading },
+  btn: { width: TOUCH, height: TOUCH, borderWidth: 1, borderRadius: radius.btn, alignItems: 'center', justifyContent: 'center' },
 });

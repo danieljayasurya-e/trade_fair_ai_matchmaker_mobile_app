@@ -6,20 +6,21 @@ function rec(id: string, hall: string, booth: string, score = 80, extra: Partial
   return {
     rank: 1,
     score,
-    matchedOn: ['Robotics'],
-    reason: 'Offers cobots.',
+    matchedOn: ['Laser Sources'],
+    reason: 'Offers lasers.',
+    insights: [],
     factors: { semantic: 0, interest: 0, intent: 0, buyerFit: 0, g2e: 0, e2g: 0 },
-    exhibitor: { id, name: `Stall ${id}`, description: '', products: [], industries: [], hall, booth },
+    exhibitor: { id, name: `Stall ${id}`, description: '', products: [], tags: [], industries: [], hall, booth, otherBooths: [], city: '', country: '' },
     ...extra,
   };
 }
 
 describe('planRoute', () => {
-  it('groups by hall and orders booths naturally', () => {
-    const route = planRoute([rec('1', 'B', 'B-10'), rec('2', 'A', 'A-7'), rec('3', 'B', 'B-2'), rec('4', 'A', 'A-12')]);
-    expect(route.halls.map((h) => h.hall)).toEqual(['A', 'B']);
-    expect(route.halls[0].stalls.map((s) => s.exhibitor.booth)).toEqual(['A-7', 'A-12']);
-    expect(route.halls[1].stalls.map((s) => s.exhibitor.booth)).toEqual(['B-2', 'B-10']);
+  it('groups by row and orders booths naturally', () => {
+    const route = planRoute([rec('1', 'LB', 'LB 10'), rec('2', 'LA', 'LA 7'), rec('3', 'LB', 'LB 2'), rec('4', 'LA', 'LA 12')]);
+    expect(route.halls.map((h) => h.hall)).toEqual(['LA', 'LB']);
+    expect(route.halls[0].stalls.map((s) => s.exhibitor.booth)).toEqual(['LA 7', 'LA 12']);
+    expect(route.halls[1].stalls.map((s) => s.exhibitor.booth)).toEqual(['LB 2', 'LB 10']);
   });
 
   it('is stable for identical booths', () => {
@@ -70,12 +71,43 @@ describe('buildVisitPdfHtml', () => {
     const html = buildVisitPdfHtml({ guestName: 'Asha', date, route: planRoute(stalls) });
     expect(html).toContain('30 stalls,');
     expect(html.match(/class="stop"/g)).toHaveLength(30);
-    expect(html).toContain('<td class="stop">30</td>');
+    expect(html).toContain('<div class="stop">30</div>');
   });
 
   it('shows "General match" when nothing matched', () => {
     const html = buildVisitPdfHtml({ guestName: 'A', date, route: planRoute([rec('1', 'A', 'A-1', 50, { matchedOn: [] })]) });
-    expect(html).toContain('Matched on: General match');
+    expect(html).toContain('<span class="chip">General match</span>');
+  });
+
+  it('draws the map with every row, numbered stops and a route line', () => {
+    const route = planRoute([rec('1', 'LA', 'LA 2'), rec('2', 'LC', 'LC 40')]);
+    const html = buildVisitPdfHtml({ guestName: 'A', date, route, rows: ['LA', 'LB', 'LC'] });
+    expect(html).toContain('Schematic by booth row and number');
+    expect(html).toContain('>LB</text>');
+    expect(html.match(/<polyline /g)).toHaveLength(1);
+    expect(html.match(/>2<\/text>/g)).toHaveLength(1);
+  });
+
+  it('draws no route line for a single stop', () => {
+    const html = buildVisitPdfHtml({ guestName: 'A', date, route: planRoute([rec('1', 'LA', 'LA 2')]) });
+    expect(html).not.toContain('<polyline');
+  });
+
+  it('shows the match score, location and extra booths', () => {
+    const r = rec('1', 'LB', 'LB 61', 84);
+    r.exhibitor.otherBooths = ['LA 26'];
+    r.exhibitor.city = 'Pune';
+    r.exhibitor.country = 'India';
+    const html = buildVisitPdfHtml({ guestName: 'A', date, route: planRoute([r]) });
+    expect(html).toContain('84 percent match');
+    expect(html).toContain('Booth LB 61, LA 26 · Pune, India · Rank #1');
+    expect(html).toContain('Hall 1, Row LB');
+  });
+
+  it('draws repeating page margins unless the platform adds its own', () => {
+    const route = planRoute([rec('1', 'LA', 'LA 2')]);
+    expect(buildVisitPdfHtml({ guestName: 'A', date, route })).toContain('height: 14mm');
+    expect(buildVisitPdfHtml({ guestName: 'A', date, route, pageMargins: false })).not.toContain('height: 14mm');
   });
 
   it('keeps Hindi and emoji intact', () => {

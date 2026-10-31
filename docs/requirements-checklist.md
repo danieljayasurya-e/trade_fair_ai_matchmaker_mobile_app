@@ -12,7 +12,7 @@ Status: ✅ done · 🟡 partly done · ⏳ waiting on backend.
 | Compatibility score, normalised (0–100) | ✅ | Engine is backend; app validates `score` as integer 0–100 (`recommendationSchema`). Offline mock: `src/api/mock/scorer.ts` |
 | Top 30 with booth details and rationale | ✅ | `src/screens/ResultsScreen.tsx`, `src/features/results/ResultCard.tsx` |
 | Guest selects a profile, views top 30, inspects scores, bookmarks | ✅ | Sample profiles on the form; `StallDetailSheet.tsx`; `useToggleBookmark` in `src/api/queries.ts` |
-| Filter/sort by score, industry, hall/booth, product category | ✅ | `src/features/results/filtering.ts`, `FilterSheet.tsx`, search bar in `ResultsScreen.tsx` |
+| Filter/sort by score, industry, booth row, product category, saved | ✅ | `src/features/results/filtering.ts`, `FilterSheet.tsx`, search bar in `ResultsScreen.tsx` |
 | Explainable insights ("Matched on: …") | ✅ | Matched-on chips on cards and in the sheet; "General match" when empty |
 | Top 30 in under 2 s, latency visible | ✅ | "Top 30 in N ms" badge, skeleton loaders, "Matching you against every stall…" |
 | Fairness: no hard-coded preferences or suppression | ✅ | App renders server order as-is; mock scorer uses profile fit only; "No paid boosts" note in the sheet and PDF |
@@ -38,7 +38,7 @@ Status: ✅ done · 🟡 partly done · ⏳ waiting on backend.
 | 5. Search and filter | ✅ | `FilterSheet.tsx`, `filtering.ts` |
 | 6. Stall detail with score breakdown bars | ✅ | `StallDetailSheet.tsx`, `ScoreBar.tsx` (semantic, interest, intent, buyer fit, you→stall, stall→you) |
 | 7. Bookmarks → My visit list | ✅ | `src/screens/VisitListScreen.tsx`, swipe to remove in `src/features/visit/SavedStallRow.tsx` |
-| 8. Plan my route (hall, then booth) | ✅ | `src/features/visit/route.ts` (natural booth sort) |
+| 8. Plan my route (row, then booth), shown on a schematic map | ✅ | `src/features/visit/route.ts` (natural booth sort), `src/screens/MapScreen.tsx` |
 | 9. Download PDF | ✅ | `src/features/visit/pdfHtml.ts` (escaped), `exportPdf.ts` (`react-native-html-to-pdf` + `react-native-share`) |
 | 10. Edit details → list recomputes, cards animate | ✅ | `useSaveGuest`, `src/store/rankChangesStore.ts`, `RankChangeBadge.tsx`, Reanimated `LinearTransition` in `ResultsScreen.tsx` |
 
@@ -71,6 +71,6 @@ Status: ✅ done · 🟡 partly done · ⏳ waiting on backend.
 | Cleartext HTTP blocked → clear "Can't reach server" | ✅ | `describeError` for `NETWORK`; debug network security config allows LAN HTTP |
 | Android back closes sheet first, never exits from results by accident | ✅ | `Sheet.tsx` (`onRequestClose`); Landing kept under Main in the stack; Maestro `03` |
 | Route/PDF with zero bookmarks → disabled + hint | ✅ | `VisitListScreen.tsx`; `guestFlow.test.tsx` |
-| Same hall → natural booth order (B-2 before B-10) | ✅ | `naturalSort.ts`, `route.ts`; `visit.test.ts`, `filtering.test.ts` |
+| Same row → natural booth order (LA 2 before LA 10) | ✅ | `naturalSort.ts`, `route.ts`; `visit.test.ts`, `filtering.test.ts` |
 | PDF with 1 and 30 stalls, escaped | ✅ | `visit.test.ts` |
 | `updatedAt` last write wins | ✅ | `conflict.ts`, enforced in `sessionStore.setGuest`; `profile.test.ts` |

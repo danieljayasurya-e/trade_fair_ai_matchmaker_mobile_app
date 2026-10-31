@@ -3,8 +3,8 @@ import Config from 'react-native-config';
 
 // react-native-config reads .env at native build time.
 // After changing .env, rebuild the app (npm run android); a Metro reload is not enough.
-const rawApiUrl = Config.API_URL ?? 'http://localhost:4000';
-const rawUseMock = Config.USE_MOCK ?? 'true';
+const rawApiUrl = Config.API_URL ?? 'http://92.4.77.213';
+const rawUseMock = Config.USE_MOCK ?? 'false';
 
 // The Android emulator reaches the host machine at 10.0.2.2, not localhost.
 function resolveApiUrl(url: string): string {

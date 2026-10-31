@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { DEFAULT_FILTERS, type Filters } from '../features/results/filtering';
 
-type ListKey = 'industries' | 'halls' | 'products';
+type ListKey = 'industries' | 'halls' | 'categories';
 
 interface FiltersState extends Filters {
   set: (patch: Partial<Filters>) => void;
@@ -17,7 +17,7 @@ export const useFilters = create<FiltersState>((set) => ({
       [key]: s[key].includes(value) ? s[key].filter((v) => v !== value) : [...s[key], value],
     })),
   // Keeps sort order and search text; those are not "filters" in the chip row.
-  clearFilters: () => set({ minScore: 0, industries: [], halls: [], products: [] }),
+  clearFilters: () => set({ minScore: 0, industries: [], halls: [], categories: [], savedOnly: false }),
 }));
 
 export function selectFilters(s: FiltersState): Filters {
@@ -25,7 +25,8 @@ export function selectFilters(s: FiltersState): Filters {
     minScore: s.minScore,
     industries: s.industries,
     halls: s.halls,
-    products: s.products,
+    categories: s.categories,
+    savedOnly: s.savedOnly,
     sortBy: s.sortBy,
     search: s.search,
   };
